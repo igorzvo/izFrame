@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN" "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+<!-- file should end up in JAR file as META-INF/taglib.tld, which you can do by modyfying build.xml as following:
+    <target name="-pre-jar">
+       <mkdir dir="${build.classes.dir}/META-INF"/>
+       <copy file="${build.classes.dir}/izFrame/izFrame.tld" tofile="${build.classes.dir}/META-INF/taglib.tld"/>
+       <delete file="${build.classes.dir}/izFrame/izFrame.tld"/>
+   </target>
+-->
+<taglib>
+    <tlib-version>1.0</tlib-version>
+    <jsp-version>1.2</jsp-version>
+    <short-name>bean</short-name>
+    <uri>http://www.javaworld.info/izFrame</uri>
+    <description>Generates html appropriate to attributes set in the tag on the jsp page - input, message, error, pageInfo.</description>
+    <tag>
+      <name>message</name>
+      <tag-class>izFrame.WebBean</tag-class>
+      <tei-class />
+      <body-content>empty</body-content>
+      <description><![CDATA[
+      Displays message from resource file.
+      <br> For Message group of tags, type can be 'message' or 'errors', if omitted, 'message' is assumed. 
+      <br> For messages to be displayed with proper Locale, it must be stored in session attrubute 'attr_locale', 
+         see Web.setLocale().
+      <br> Type 'message' is using 'key' attribute - as a key to find string from APP_MSG_RESOURCE and, optionally,
+         'param' or 'beanParam' attribute. Use one of last two if your message accepts parameter (has {0}). Value of
+         'param' will replace {0} in the message, while value of 'beanParam' is name FormBean field which value replaces {0}.
+      <br> Type 'errors' is not using any attributes as it expects to find ArrayList of error messages in request
+         attribute attr_errList. For changing format or 'error' list from the default one, define in application resource
+         (APP_MSG_RESOURCE) the following entries: errors.header, errors.prefix, errors.suffix, errors.footer.
+         Each error message is displayed between errors.prefix and errors.suffix.
+      ]]>
+      </description>
+      <attribute><name>type</name><required>false</required><rtexprvalue>false</rtexprvalue>
+       <description>type can be 'message' or 'errors', if omitted, 'message' is assumed</description>
+      </attribute>
+      <dynamic-attributes>true</dynamic-attributes>
+   </tag>
+   <tag>
+      <name>bean</name>
+      <tag-class>izFrame.WebBean</tag-class>
+      <tei-class />
+      <body-content>empty</body-content>
+      <description><![CDATA[
+      Displays html appropriate to attributes set in the tag on the jsp page - input, message, field/row/table,
+      error, select, pageInfo, etc.
+      <ul> <li> HTML 'input' element is generated if type is the same as supported by input in HTML 4.01/XHTML 1.0:
+         button,checkbox,file,hidden,image,password,radio,reset,submit,text.
+         <br> Input supports following attributes: type, name, value, class, style, extras. Note, that normally 'value'
+         is optional as it will be drawn from the bean, so, supply it only if you want to overwrite (like first page init)
+         it, or for inputs like radio and checkbox to set 'checked' attribute properly. See toHtmlInput() for more details.
+         Type 'hidden' also supports 'write' attribute and if its value is 'true' will write actual value besides hidden field.
+      </li><li> if type is set to one of 'field, row, tablebody' displays value corresponding to 'name' and stored either in dao
+         (first priority) of responseFlds map. 'field' type is using 'name' and 'value' attributes, 'row' and 'tablebody' accept
+         all attributes (class and extras will be applied to tr or table elements accordingly. When type is
+         one of 'field, row' value attribute supposed to contain Dao row number or number of element in ArrayList stored
+         in responseFlds map. Actually for these types 'value' attribute is optional - if omitted, 0 Dao row or String stored
+         in responseFlds map is assumed. For 'tablebody' type 'value' attribute should contain coma delimited list of headers
+         defined in message resource file. For 'row, tablebody' types 'name' attribute accepts coma delimited list of all
+         names to display and 'style' attribute accepts coma delimited list of all names and their table cell attribs in format:
+         "col_num1:tdattr1,col_num2:tdattr2,...", like "1:align=right,2:align=left". Names containing string ZrownumZ
+         are special names that will be outputed back as is except that ZrownumZ will be replaced with current row number -
+         handy to generate columns of links, checkboxes, etc.
+         <br> Also, tag 'tablebody' accepts optional attribute 'rowsPerPage' to define set of rows to display and stores
+         this info in page attribute attr_minRow for further row sets. It also reads request attribute with that name set by
+         'rangeLinks' tag, so when you use it in coordination with 'rangeLinks' tag you can bypass servlet in navigation
+         from one results page to another one.
+      </li><li> tag 'rangeLinks' creates set of links to access/display set of rows that are less then full set Dao contains.
+         Tag uses attributes 'action' and 'extraParam' and implicitly page attribute attr_minRow set by 'tablebody'.
+         By adding value of it to generated page navigation link, allows pages navigation bypassing servlet. For such
+         scenario set tag's 'action' attribute to page itself, like action="izFrameTutor/adminUser.jsp". As in all other
+         cases when you access JSP bypassing servlet, add attr innerPageNm={pg name, like adminUser.jsp} to pageInfo tag.
+         By default link value is in format of {minRow}-{maxRow}, if you want format of {pageNum}, add attrib byPages="1".
+      </li><li>For Message group of tags, type can be 'message' or 'errors', if omitted, 'message' is assumed. For messages
+         to be displayed with proper Locale, it must be stored in session attrubute 'attr_locale', see Web.setLocale().
+         <br> Type 'message' is using 'key' attribute - as a key to find string from APP_MSG_RESOURCE and, optionally,
+         'param' or 'beanParam' attribute. Use one of last two if your message accepts parameter (has {0}). Value of
+         'param' will replace {0} in the message, while value of 'beanParam' is name FormBean field which value replaces {0}.
+         <br> Type 'errors' is not using any attributes as it expects to find ArrayList of error messages in request
+         attribute attr_errList. For changing format or 'error' list from the default one, define in application resource
+         (APP_MSG_RESOURCE) the following entries: errors.header, errors.prefix, errors.suffix, errors.footer.
+         Each error message is displayed between errors.prefix and errors.suffix.
+      </li><li> tag of type='select' creates html 'select' based on array of values in named field, appends 'Sel' to outName.
+      </li><li> tag of type='pageInfo' adds to html form couple of hidden fields: inner page name and page sequence ID.
+         Has one optional attribute - innerPageNm, to use when you plan show JSP bypassing servlet.
+      </li></ul>
+      Note:<br>1. attributes 'class' and 'style' will be single quoted in the output, 'extras' - prefixed with space
+      <br>2. in izFrame.tld tag names message and bean refer to this class, hense these tag names can be used interchangibly
+      <br>3. Remember, DB.Dao class works in double capacity - as data holder and as a list of other Dao classes. Rownum
+      attribute is what indicates to framework that you want to use the second form.
+      <br> Samples: <pre>
+      &lt;%@ taglib prefix="f" uri="/WEB-INF/lib/izFrame.jar" %&gt; - this will indicate to JSP to use izFrame web tag library
+      &lt;f:message key="Hdr_Addr"/&gt; - this will display string stored in message resources file with key Hdr_Addr
+      &lt;f:bean type="field" name="userAndRole"/&gt; - will display value stored in FormBean field userAndRole
+      &lt;f:bean type="pageInfo"/&gt; - will create couple (page name and sequence) of hidden fields on the page.
+      ]]>
+      </description>
+      <attribute><name>type</name><required>true</required><rtexprvalue>false</rtexprvalue>
+       <description>type can be one of HTML input tag types like 'text', 'radio', .., plain text fields like 'message', 'error',
+         or special type specific to izFrame framework like 'pageInfo' (generates hidden fields of page name and sequence)</description>
+      </attribute>
+      <attribute><name>name</name><required>false</required><rtexprvalue>false</rtexprvalue>
+       <description>WebFormBean field name user wants to display</description>
+      </attribute>
+      <attribute><name>value</name><required>false</required><rtexprvalue>false</rtexprvalue>
+       <description>value, if it is other then named field holds. Useful for initialization and for checkbox, radio types where it
+         adds 'checked' input attribute if value is same as stored in bean field</description>
+      </attribute>
+      <dynamic-attributes>true</dynamic-attributes>
+   </tag>
+</taglib>
